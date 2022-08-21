@@ -1,11 +1,12 @@
 package main
 
 import (
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"proxy-website/env"
 	"strconv"
 	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
 func indexHtml(c *gin.Context) {
@@ -23,6 +24,6 @@ func main() {
 	r.LoadHTMLGlob("static/template/*")
 	r.GET("/", indexHtml)
 	r.GET("/index", indexHtml)
-
+	r.StaticFile("/favicon.ico", "./static/favicon.ico")
 	_ = r.Run(":" + strconv.Itoa(env.GetConfig().Port))
 }
