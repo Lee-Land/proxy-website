@@ -5,6 +5,12 @@
     <title>Title</title>
 </head>
 <body>
-    {{ .title }}
+    <h1> {{ .title }} </h1>
+    <h3>latest version</h3>
+    <ul>
+        {{range $key,$value:=.files}}
+        <li><a href="/release/{{$value}}">{{$value}}</a></li>
+        {{ end }}
+    </ul>
 </body>
 </html>
