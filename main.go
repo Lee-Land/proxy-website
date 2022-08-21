@@ -3,6 +3,8 @@ package main
 import (
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"proxy-website/env"
+	"strconv"
 	"time"
 )
 
@@ -22,5 +24,5 @@ func main() {
 	r.GET("/", indexHtml)
 	r.GET("/index", indexHtml)
 
-	_ = r.Run(":8080")
+	_ = r.Run(":" + strconv.Itoa(env.GetConfig().Port))
 }
