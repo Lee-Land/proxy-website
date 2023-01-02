@@ -37,5 +37,7 @@ func main() {
 	r.GET("/index", indexHtml)
 	r.StaticFile("/favicon.ico", "./static/favicon.ico")
 	r.Static("/release/", "./static/release/")
+	r.GET("/ip/test", ipTest)
+	r.GET("ip/get", ipGet)
 	_ = r.Run(":" + strconv.Itoa(env.GetConfig().Port))
 }
