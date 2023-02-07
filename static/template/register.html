@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/layui/css/layui.css" />
+    <link rel="stylesheet" href="/static/css/style.css">
+    <title>注册</title>
+</head>
+<style>
+    html,
+    body {
+        height: 100%;
+    }
+
+    body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-image: url("static/image/login_bg.png");
+        background-size: cover;
+    }
+</style>
+
+<body>
+
+    <div class="login-div">
+        <h1>注册</h1>
+        <form id="login-form" action="/login/form" method="post">
+            <div class="login-form-item">
+                <input id="username" name="username" placeholder="邮箱" type="email">
+            </div>
+            <div class="login-form-item">
+                <input id="password" name="password" type="password" placeholder="密码">
+            </div>
+            <div class="login-form-item">
+                <input style="width: 212px;" id="verifycode" type="text" placeholder="验证码">
+                <button style="height: 43px;" class="layui-btn layui-btn-lg" type="button" id="SendCode">发送</button>
+            </div>
+            <button class="btn-login" type="button" id="SubmitForm">注册</button>
+        </form>
+    </div>
+
+</body>
+<script src="/static/js/jquery.min.js"></script>
+<script src="/static/layui/layui.js"></script>
+<script>
+
+    $(function () {
+        let layer
+        layui.use('layer', function () {
+            layer = layui.layer;     
+        });
+
+        $("#SendCode").click(function () {
+            var username = $("#username").val();
+            var reg = /^\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$/
+            if (!reg.test(username)) {
+                layer.msg("邮箱格式错误");
+                return;
+            }
+            $.ajax({
+                url: "/verifycode",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify({ username: username }),
+                success: (resp) => {
+                    layer.msg(resp.msg);
+                },
+                error: ((resp) => {
+                    layer.msg(resp.msg)
+                })
+            })
+        })
+
+        $("#SubmitForm").click(() => {
+            var username = $("#username").val();
+            var password = $("#password").val();
+            var verifycode = $("#verifycode").val();
+
+            var reg = /^\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$/;
+            if (!reg.test(username)) {
+                layer.msg("邮箱格式错误");
+                return;
+            }
+
+            if (password == "") {
+                layer.msg("密码不能为空");
+                return
+            }
+
+            if (verifycode == "") {
+                layer.msg("验证码不能为空")
+                return
+            }
+
+            $.ajax({
+                url: "register/form",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify({ username: username, password: password, verifycode: verifycode }),
+                success: (resp) => {
+                    layer.msg(resp.msg)
+                    if (resp.code == "1") {
+                        setTimeout(()=>{layer.msg("5秒后跳转到登录页面！");},1000)
+                        setTimeout(() => {
+                            window.location.href = "/login"
+                        },5500)
+                    }
+                },
+                error: (resp) => {
+                    layer.msg(resp.msg)
+                }
+            })
+        })
+
+    })
+
+
+</script>
+
+</html>

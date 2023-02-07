@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/layui/css/layui.css" />
+    <!-- <link rel="stylesheet" href="/static/css/style.css"> -->
+    <title>主页</title>
+
+</head>
+
+<body>
+    <input class="layui-input" type="text" id="key" placeholder="密钥"/>
+    <button class="layui-btn layui-btn-fluid"  id="bind_btn">绑定</button>
+
+    <table class="layui-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>KEY</th>
+                <th>剩余流量</th>
+                <th>截止日期</th>
+                <th>绑定日期</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{range $key,$value:=.traffic}}
+            <tr>
+                <td>{{$value.ID}}</td>
+                <td>{{$value.Key}}</td>
+                <td>{{$value.Traffic}}M</td>
+                <td>{{$value.Deadline|formatAsDate}}</td>
+                <td>{{$value.CreatedAt|formatAsDate}}</td>
+            </tr>
+            {{end}}
+
+        </tbody>
+    </table>
+
+   
+
+</body>
+<script src="/static/js/jquery.min.js"></script>
+<script src="/static/layui/layui.js"></script>
+<script>
+    $(function () {
+        let layer
+        layui.use('layer', function () {
+            layer = layui.layer;
+        });
+
+        $("#bind_btn").click(() => {
+            let key = $("#key").val();
+            if (key == null) {
+                layer.msg("密钥不能为空")
+                return
+            }
+   
+
+            $.ajax({
+                url: "/bind",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify({ key: key}),
+                success: (resp) => {
+                    if(resp.code == 1){
+                        window.location.reload()
+                    }
+                },
+                error: (resp) => {
+                    layer.msg(resp.msg)
+                }
+            })
+
+        })
+    })
+</script>
+
+</html>

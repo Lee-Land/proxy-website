@@ -1,43 +1,70 @@
 package main
 
 import (
-	"io/ioutil"
+	"html/template"
 	"net/http"
 	"proxy-website/env"
+	"proxy-website/tools"
 	"strconv"
 	"time"
+
+	"github.com/golang-jwt/jwt/v4"
 
 	"github.com/gin-gonic/gin"
 )
 
-func indexHtml(c *gin.Context) {
-	files, err := ioutil.ReadDir("./static/release/")
-	if err != nil {
-		c.String(http.StatusOK, err.Error())
-		return
+func AuthRequired() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		s, err := c.Cookie("token")
+		if err != nil {
+			c.AbortWithStatus(http.StatusUnauthorized)
+		}
+		token, err2 := tools.ParseToken(s)
+		if err2 != nil {
+			c.AbortWithStatus(http.StatusUnauthorized)
+		}
+		if !token.Valid {
+			c.AbortWithStatus(http.StatusUnauthorized)
+		}
+		if mc, ok := token.Claims.(jwt.MapClaims); ok {
+			c.Set("UserName", mc["UserName"])
+		} else {
+			c.AbortWithStatus(http.StatusInternalServerError)
+		}
+
 	}
-	var releaseFiles []string
-	for _, file := range files {
-		releaseFiles = append(releaseFiles, file.Name())
-	}
-	c.HTML(http.StatusOK, "index.html", gin.H{
-		"title": "Welcome to Liu-Proxy Website",
-		"files": releaseFiles,
-	})
+}
+
+func formatAsDate(t time.Time) string {
+	return t.Format("2006-01-02 15:04:05")
 }
 
 func main() {
+	gin.SetMode(gin.DebugMode)
 	r := gin.Default()
-	r.GET("/checkup", func(c *gin.Context) {
-		c.String(http.StatusOK, time.Now().String())
+	r.SetFuncMap(template.FuncMap{
+		"formatAsDate": formatAsDate,
 	})
+
+	authorized := r.Group("/")
+	authorized.Use(AuthRequired())
+	{
+		authorized.GET("/ip/test", ipTest)
+		authorized.GET("ip/get", ipGet)
+		authorized.GET("/main", mainUserPage)
+		authorized.POST("/bind", bind)
+	}
 
 	r.LoadHTMLGlob("static/template/*")
 	r.GET("/", indexHtml)
 	r.GET("/index", indexHtml)
 	r.StaticFile("/favicon.ico", "./static/favicon.ico")
 	r.Static("/release/", "./static/release/")
-	r.GET("/ip/test", ipTest)
-	r.GET("ip/get", ipGet)
+	r.Static("/static/", "./static/static/")
+	r.GET("login", loginHtml)
+	r.POST("login/form", loginForm)
+	r.GET("register", register)
+	r.POST("register/form", registerForm)
+	r.POST("/verifycode", verifycode)
 	_ = r.Run(":" + strconv.Itoa(env.GetConfig().Port))
 }

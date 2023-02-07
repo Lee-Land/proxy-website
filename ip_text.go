@@ -2,11 +2,12 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"proxy-website/dao"
 	"regexp"
-	"time"
 
 	"github.com/PuerkitoBio/goquery"
 )
@@ -14,6 +15,7 @@ import (
 const (
 	ADDRESS   = "http://ip.bczs.net/country/CN"
 	SAVE_PATH = "static/ip"
+	File_NAME = "ip.txt"
 )
 
 func queryDate(headText string) string {
@@ -43,8 +45,14 @@ func Cought() {
 	}
 
 	headText := doc.Find("thead").Find("td").Text()
-
-	f, err := os.Create(SAVE_PATH + "/ip_" + queryDate(headText) + ".txt")
+	ddl := queryDate(headText)
+	ip := dao.FindIpByDDL(ddl)
+	if ip.DDL != "" {
+		fmt.Println("ip.txt 已经是最新版本")
+		return
+	}
+	dao.CreateIp(File_NAME, ddl)
+	f, err := os.Create(SAVE_PATH + "/" + File_NAME)
 	if err != nil {
 		log.Panicln(err)
 	}
@@ -53,14 +61,16 @@ func Cought() {
 	doc.Find("tbody tr").Each(func(i int, s *goquery.Selection) {
 		f.WriteString(s.Find("td:nth-child(1)").Text() + " " + s.Find("td:nth-child(2)").Text() + "\n")
 	})
-
 }
 
+/*
+	每24小时抓取一次ip.txt
+*/
 func init() {
-	log.Println("国内ip范围爬取服务启动")
-	go func() {
-		cleanIps()
-		Cought()
-		time.Sleep(time.Hour * 24)
-	}()
+	// log.Println("国内ip范围爬取服务启动")
+	// go func() {
+	// 	cleanIps()
+	// 	Cought()
+	// 	time.Sleep(time.Hour * 24)
+	// }()
 }
